@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import com.example.lifepawtners.ui.navigation.AppNavigation
 import com.example.lifepawtners.ui.theme.LifePawtnersTheme
 
 
@@ -13,9 +14,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             LifePawtnersTheme {
-                //calls main screen
-                MainScreen()
+                AppNavigation()
             }
         }
+        }
     }
-}
+

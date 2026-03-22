@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.lifepawtners.R
 import com.example.lifepawtners.ui.theme.LifePawtnersTheme
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 class AuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,8 +42,11 @@ class AuthActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LifePawtnersTheme {
+                val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(modifier = Modifier.padding(innerPadding))
+                    LoginScreen(
+                        navController = navController,
+                        modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -49,7 +54,9 @@ class AuthActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun LoginScreen(
+    navController: NavController,
+    modifier: Modifier = Modifier) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -94,14 +101,14 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { /* TODO: Handle login logic */ },
+            onClick = { navController.navigate("swipe") },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.medium
         ) {
             Text("Login")
         }
         Button(
-            onClick = { /* TODO: Handle create logic */ },
+            onClick = { navController.navigate("create") },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.medium
         ) {
@@ -114,6 +121,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 @Composable
 fun LoginPreview() {
     LifePawtnersTheme {
-        LoginScreen()
+        val navController = rememberNavController()
+        LoginScreen(navController)
     }
 }
