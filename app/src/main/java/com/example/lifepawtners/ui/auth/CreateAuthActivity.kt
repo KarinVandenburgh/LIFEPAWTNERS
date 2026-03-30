@@ -216,9 +216,13 @@ fun CreateScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { navController.navigate("login") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium
+            onClick = {
+                if (isAdoptP) {
+                    navController.navigate("owner_profile_setup")
+                } else {
+                    navController.navigate("pet_profile_setup")
+                }
+            }
         ) {
             Text("Sign Up")
         }

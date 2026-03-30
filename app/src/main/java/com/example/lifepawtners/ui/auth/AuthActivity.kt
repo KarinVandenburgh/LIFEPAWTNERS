@@ -35,6 +35,7 @@ import com.example.lifepawtners.R
 import com.example.lifepawtners.ui.theme.LifePawtnersTheme
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.lifepawtners.ui.navigation.AppNavigation
 
 class AuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,12 +43,13 @@ class AuthActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LifePawtnersTheme {
-                val navController = rememberNavController()
+                AppNavigation()
+                /*val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     LoginScreen(
                         navController = navController,
                         modifier = Modifier.padding(innerPadding))
-                }
+                }*/
             }
         }
     }
@@ -101,7 +103,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { navController.navigate("swipe") },
+            onClick = { navController.navigate("main") },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.medium
         ) {
@@ -123,5 +125,6 @@ fun LoginPreview() {
     LifePawtnersTheme {
         val navController = rememberNavController()
         LoginScreen(navController)
+
     }
 }

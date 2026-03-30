@@ -13,6 +13,6 @@ fun MessagesScreen (modifier: Modifier = Modifier){
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ){
-        Text("Swipe Screen")
+        Text("Message Screen")
     }
 }
