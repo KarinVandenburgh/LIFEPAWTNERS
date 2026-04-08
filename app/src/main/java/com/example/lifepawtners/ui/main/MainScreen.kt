@@ -1,55 +1,60 @@
 package com.example.lifepawtners.ui.main
 
-
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.lifepawtners.R
 import com.example.lifepawtners.ui.chat.MessagesScreen
+import com.example.lifepawtners.ui.data.local.DatabaseProvider
+import com.example.lifepawtners.ui.data.model.PetProfile
+import com.example.lifepawtners.ui.profile.AccountScreen
+import com.example.lifepawtners.ui.search.SearchScreen
 import com.example.lifepawtners.ui.swipe.SwipeScreen
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Message
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.StarOutline
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.material3.NavigationBarItemDefaults
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    navController: NavController,
+    currentUserEmail: String
+) {
     var selectedItem by remember { mutableIntStateOf(0) }
+
+    val context = LocalContext.current
+    val db = DatabaseProvider.getDatabase(context)
+    val petProfileDao = db.petProfileDao()
+
+    var petList by remember { mutableStateOf<List<PetProfile>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        petList = petProfileDao.getAllPets()
+    }
 
     Scaffold(
         topBar = {
@@ -102,12 +107,11 @@ fun MainScreen() {
                     onClick = { selectedItem = 3 },
                     icon = {
                         Icon(
-                            imageVector = Icons.Filled.Message,
+                            imageVector = Icons.Default.Message,
                             contentDescription = "Messages",
                             tint = Color(0xFFFF6150)
                         )
                     }
-
                 )
                 NavigationBarItem(
                     selected = selectedItem == 4,
@@ -130,30 +134,32 @@ fun MainScreen() {
             contentAlignment = Alignment.Center
         ) {
             when (selectedItem) {
-                0 -> SwipeScreen()
-                1 -> Text("Search tab")
+                0 -> SwipeScreen(
+                    petList = petList,
+                    currentUserEmail = currentUserEmail
+                )
+
+                1 -> SearchScreen()
                 2 -> Text("Saved tab")
-                3 -> MessagesScreen()
-                4 -> Text("Profile tab")
+
+                3 -> MessagesScreen(
+                    onChatClick = { chatId ->
+                        navController.navigate("chat/$chatId")
+                    }
+                )
+
+                4 -> AccountScreen(
+                    isPetLister = false,
+                    onEditProfileClick = { },
+                    onAddPetClick = { },
+                    onManagePetsClick = { },
+                    onLogoutClick = {
+                        navController.navigate("login") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }
 }
-/*settings bar if needed
-         actions = {
-
-                    //Settings button (on right)
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-
-*/

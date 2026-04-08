@@ -1,5 +1,10 @@
 package com.example.lifepawtners.ui.pOwner
 
+
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -23,18 +30,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
+import coil.compose.AsyncImage
+import com.example.lifepawtners.ui.data.local.DatabaseProvider
+import com.example.lifepawtners.ui.data.model.OwnerProfile
+import kotlinx.coroutines.launch
 
 @Composable
-fun POwnerProfileSetupScreen(navController: NavController) {
+fun POwnerProfileSetupScreen(
+    navController: NavController,
+    email: String
+) {
     var firstName by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
     var housingType by remember { mutableStateOf("") }
@@ -43,6 +58,20 @@ fun POwnerProfileSetupScreen(navController: NavController) {
     var hasYard by remember { mutableStateOf("Yes") }
     var hasPets by remember { mutableStateOf("No") }
 
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val context = LocalContext.current
+    val db = DatabaseProvider.getDatabase(context)
+    val ownerProfileDao = db.ownerProfileDao()
+    val scope = rememberCoroutineScope()
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+        }
+    }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.White
@@ -78,14 +107,26 @@ fun POwnerProfileSetupScreen(navController: NavController) {
                         shape = RoundedCornerShape(16.dp)
                     )
                     .clickable {
-                        // later: image picker
+                        // image picker
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
                     },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+                if (selectedImageUri != null) {
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Pet photo",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = "+",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -210,7 +251,7 @@ fun POwnerProfileSetupScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Text(
+            /*Text(
                 text = "Bio",
                 fontWeight = FontWeight.Medium
             )
@@ -225,16 +266,30 @@ fun POwnerProfileSetupScreen(navController: NavController) {
                     .height(120.dp),
                 placeholder = { Text("Tell us a little about yourself") },
                 shape = RoundedCornerShape(14.dp)
-            )
+            )*/
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = {
-                    navController.navigate("main") {
-                        popUpTo("login") { inclusive = true}
-                    }
 
+                onClick = {
+                    scope.launch {
+                        ownerProfileDao.insertOwnerProfile(
+                            OwnerProfile(
+                                accountEmail = email,
+                                age = age,
+                                housingType = housingType,
+                                hasYard = hasYard,
+                                hasPets = hasPets,
+                                //bio = " ",
+                                photoUri = selectedImageUri?.toString()
+                            )
+                        )
+
+                        navController.navigate("main/$email") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)

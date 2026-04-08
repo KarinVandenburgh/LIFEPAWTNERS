@@ -34,14 +34,44 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import coil.compose.AsyncImage
+import com.example.lifepawtners.ui.data.local.DatabaseProvider
+import com.example.lifepawtners.ui.data.model.PetProfile
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import java.util.UUID
 
 @Composable
-fun PetProfileSetupScreen(navController: NavController) {
+fun PetProfileSetupScreen(
+    navController: NavController,
+    email: String
+) {
     var petType by remember { mutableStateOf("Dog") }
     var age by remember { mutableStateOf("") }
     var breed by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
 
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val context = LocalContext.current
+    val db = DatabaseProvider.getDatabase(context)
+    val petProfileDao = db.petProfileDao()
+    val scope = rememberCoroutineScope()
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+        }
+    }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.White
@@ -78,13 +108,25 @@ fun PetProfileSetupScreen(navController: NavController) {
                     )
                     .clickable {
                         // later: open gallery / image picker
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
                     },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+                if (selectedImageUri != null) {
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Pet photo",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = "+",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -186,9 +228,23 @@ fun PetProfileSetupScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    // later: save pet profile to database
-                    navController.navigate("main") {
-                        popUpTo("login") { inclusive = true }
+                    scope.launch {
+                        petProfileDao.insertPetProfile(
+                            PetProfile(
+                                petId = UUID.randomUUID().toString(),
+                                ownerEmail = email,
+                                name = name,
+                                age = age,
+                                type = petType,
+                                breed = breed,
+                               // bio = "",
+                                photoUri = selectedImageUri?.toString()
+                            )
+                        )
+
+                        navController.navigate("requests/$email") {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

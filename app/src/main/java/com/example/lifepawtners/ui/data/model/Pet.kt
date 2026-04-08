@@ -1,4 +1,4 @@
-package com.example.lifepawtners.ui.data.model.swipe
+package com.example.lifepawtners.ui.data.model
 
 import androidx.annotation.DrawableRes
 
